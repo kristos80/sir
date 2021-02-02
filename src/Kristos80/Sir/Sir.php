@@ -101,7 +101,7 @@ class Sir {
 			$data->{$key} = $this->shouldSync($key, $value) ? $this->sync($value) : $value;
 			$parentDependents = $this->extractDependents($key, $value, $parentDependents);
 		}
-
+				
 		$dataSirConfiguration = $this->getDataSirConfiguration($data);
 		if ($dataSirConfiguration && ! Opton::get($dataSirConfiguration->idColumn, $data)) {
 			($record = $this->getRecord($data, $dataSirConfiguration)) ? $data->{$dataSirConfiguration->idColumn} = (int) $record->{$dataSirConfiguration->idColumn} : NULL;
@@ -123,7 +123,8 @@ class Sir {
 			}
 		}
 
-		$data = $this->syncParentDependents($parentDependents, $data, $dataSirConfiguration->idColumn);
+		$data = (empty($parentDependents)) ? $data : $this->syncParentDependents($parentDependents, $data,
+			$dataSirConfiguration->idColumn);
 
 		if (! Opton::get('DEBUG_SIR', $_ENV)) {
 			unset($data->{self::SIR});
@@ -185,7 +186,6 @@ class Sir {
 
 	const MAGIC_SIR_PROPERTIES = [
 		self::SIR,
-		'__sirFailedToGet',
 	];
 
 	public function normalizeDataColumns(\stdClass $data, string $idColumn, bool $onlyColumns = FALSE): array {
