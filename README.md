@@ -49,7 +49,7 @@ $store->{$productsDeps}->{$recordsProp} = [
 		'name' => 'Fabulous product 2',
 		'sku' => 'fab-product',
 		'uid' => 'fab-product',
-		'product_type_id' => [
+		'product_type_id' => (object) [
 			$sirProp => [
 				$tableProp => 'product_type',
 				$searchColProp => 'label',
@@ -60,7 +60,7 @@ $store->{$productsDeps}->{$recordsProp} = [
 	]
 ];
 
-echo json_encode(($sir->sync(json_decode(json_encode($store)))));
+echo json_encode($sir->sync($store));
 ```
 ```
 {
