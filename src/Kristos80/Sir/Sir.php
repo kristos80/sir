@@ -58,6 +58,7 @@ class Sir {
 
 	public function __construct(?SirConfiguration $sirConfiguration = NULL) {
 		if ($sirConfiguration) {
+			($pdo = Opton::get('pdo', $sirConfiguration)) ? $this->setPdo($pdo) : NULL;
 			($pdoSettings = Opton::get('pdoSettings', $sirConfiguration)) ? $this->setPdoSettings($pdoSettings) : NULL;
 			($databaseType = Opton::get('databaseType', $sirConfiguration)) ? $this->setDatabaseType($databaseType) : NULL;
 		}
