@@ -102,7 +102,7 @@ class Sir {
 			$data->{$key} = $this->shouldSync($key, $value) ? $this->sync($value) : $value;
 			$parentDependents = $this->extractDependents($key, $value, $parentDependents);
 		}
-				
+
 		$dataSirConfiguration = $this->getDataSirConfiguration($data);
 		if ($dataSirConfiguration && ! Opton::get($dataSirConfiguration->idColumn, $data)) {
 			($record = $this->getRecord($data, $dataSirConfiguration)) ? $data->{$dataSirConfiguration->idColumn} = (int) $record->{$dataSirConfiguration->idColumn} : NULL;
@@ -149,7 +149,9 @@ class Sir {
 		$sth = $this->getPdo()
 			->prepare($select->getStatement());
 		$sth->execute($select->getBindValues());
-
+		
+		$this->throwSqlErrorIfNeeded($sth);
+		
 		return ($record = $sth->fetch(\PDO::FETCH_OBJ)) ? $record : NULL;
 	}
 
@@ -163,7 +165,9 @@ class Sir {
 		$sth = $this->getPdo()
 			->prepare($insert->getStatement());
 		$sth->execute($insert->getBindValues());
-
+		
+		$this->throwSqlErrorIfNeeded($sth);
+		
 		$idColumn = $insert->getLastInsertIdName($dataSirConfiguration->idColumn);
 
 		return ($newId = $this->getPdo()
@@ -183,6 +187,14 @@ class Sir {
 		$sth = $this->getPdo()
 			->prepare($update->getStatement());
 		$sth->execute($update->getBindValues());
+		
+		$this->throwSqlErrorIfNeeded($sth);
+	}
+
+	public function throwSqlErrorIfNeeded(\PDOStatement $sth) {
+		if ($sth->errorCode() !== '00000') {
+			throw new \Exception(print_r($sth->errorInfo(), TRUE));
+		}
 	}
 
 	const MAGIC_SIR_PROPERTIES = [
