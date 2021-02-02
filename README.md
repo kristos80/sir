@@ -62,3 +62,26 @@ $store->{$productsDeps}->{$recordsProp} = [
 
 echo json_encode(($sir->sync(json_decode(json_encode($store)))));
 ```
+```
+{
+	type: "magento",
+	name: "Myikona.gr",
+	desc: "Shop Description",
+	uid: "mi",
+	base_api_url: "https://myikona.gr/wp-api/json",
+	processsing_offset: 1,
+	id: 1,
+	products: [{
+		name: "Fabulous product 2",
+		sku: "fab-product",
+		uid: "fab-product",
+		product_type_id: {
+			label: "photobook",
+			id: 1
+		},
+		parent: 0,
+		store_id: 1,
+		id: 1
+	}]
+}
+```
