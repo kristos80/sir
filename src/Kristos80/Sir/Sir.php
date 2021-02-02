@@ -92,7 +92,7 @@ class Sir {
 	}
 
 	public function sync(\stdClass $data, ?string $dependentColumn = NULL, ?int $parentId = NULL): \stdClass {
-		$data = $data ?: $this->data;
+		$data = json_decode(json_encode($data));
 
 		$parentId ? $data->{$dependentColumn} = $parentId : NULL;
 
