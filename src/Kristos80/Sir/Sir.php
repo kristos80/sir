@@ -57,7 +57,6 @@ class Sir {
 	];
 
 	public function __construct(?SirConfiguration $sirConfiguration = NULL) {
-		$_ENV['DEBUG_SIR'] = TRUE;
 		if ($sirConfiguration) {
 			($pdoSettings = Opton::get('pdoSettings', $sirConfiguration)) ? $this->setPdoSettings($pdoSettings) : NULL;
 			($databaseType = Opton::get('databaseType', $sirConfiguration)) ? $this->setDatabaseType($databaseType) : NULL;
@@ -108,12 +107,10 @@ class Sir {
 			($record = $this->getRecord($data, $dataSirConfiguration)) ? $data->{$dataSirConfiguration->idColumn} = (int) $record->{$dataSirConfiguration->idColumn} : NULL;
 
 			if (! $record) {
-				$data->__sirFailedToGet = TRUE;
 				switch ($dataSirConfiguration->mode) {
 					case self::MODE_INSERT:
 					case self::MODE_INSERT_OR_UPDATE:
 						($newId = $this->insertRecord($data, $dataSirConfiguration)) ? $data->{$dataSirConfiguration->idColumn} = $newId : NULL;
-						unset($data->__sirFailedToGet);
 						break;
 				}
 			} else {
