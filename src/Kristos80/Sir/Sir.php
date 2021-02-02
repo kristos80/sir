@@ -38,6 +38,20 @@ class Sir {
 
 	public const ID_COLUMN = 'idColumn';
 
+	public const MODE = 'mode';
+
+	public const MODE_INSERT = 'insert';
+
+	public const MODE_INSERT_OR_UPDATE = 'insertOrUpdate';
+
+	public const MODE_UPDATE = 'update';
+
+	public const MODES = [
+		self::MODE_INSERT,
+		self::MODE_INSERT_OR_UPDATE,
+		self::MODE_UPDATE,
+	];
+
 	public function __construct(?SirConfiguration $sirConfiguration = NULL) {
 		if ($sirConfiguration) {
 			($pdoSettings = Opton::get('pdoSettings', $sirConfiguration)) ? $this->setPdoSettings($pdoSettings) : NULL;
@@ -73,7 +87,7 @@ class Sir {
 		return $this->queryFactory ?: $this->queryFactory = new QueryFactory($this->databaseType);
 	}
 
-	public function sync(\stdClass $data, ?string $dependentColumn = NULL, ?int $parentId = NULL) {
+	public function sync(\stdClass $data, ?string $dependentColumn = NULL, ?int $parentId = NULL): \stdClass {
 		$data = $data ?: $this->data;
 
 		$parentId ? $data->{$dependentColumn} = $parentId : NULL;
@@ -86,46 +100,84 @@ class Sir {
 
 		$dataSirConfiguration = $this->getDataSirConfiguration($data);
 		if ($dataSirConfiguration && ! Opton::get($dataSirConfiguration->idColumn, $data)) {
-			$select = $this->getQueryFactory()
-				->newSelect()
-				->cols([
-				'*'
-			])
-				->from($dataSirConfiguration->table)
-				->where($dataSirConfiguration->searchColumn . ' = :' . $dataSirConfiguration->searchColumn)
-				->bindValues([
-				$dataSirConfiguration->searchColumn => Opton::get($dataSirConfiguration->searchColumn, $data),
-			]);
-
-			$sth = $this->getPdo()
-				->prepare($select->getStatement());
-			$sth->execute($select->getBindValues());
-			$record = $sth->fetch(\PDO::FETCH_OBJ);
-
-			$record ? $data->{$dataSirConfiguration->idColumn} = (int) $record->{$dataSirConfiguration->idColumn} : NULL;
-
+			($record = $this->getRecord($data, $dataSirConfiguration)) ? $data->{$dataSirConfiguration->idColumn} = (int) $record->{$dataSirConfiguration->idColumn} : NULL;
 			if (! $record) {
-				$insert = $this->getQueryFactory()
-					->newInsert()
-					->into($dataSirConfiguration->table)
-					->cols($this->normalizeDataColumns($data, $dataSirConfiguration->idColumn, TRUE))
-					->bindValues($this->normalizeDataColumns($data, $dataSirConfiguration->idColumn));
-
-				$sth = $this->getPdo()
-					->prepare($insert->getStatement());
-				$sth->execute($insert->getBindValues());
-
-				$idColumn = $insert->getLastInsertIdName($dataSirConfiguration->idColumn);
-				$data->{$dataSirConfiguration->idColumn} = (int) $this->getPdo()
-					->lastInsertId($idColumn);
+				$data->__sirFailedToGet = TRUE;
+				switch ($dataSirConfiguration->mode) {
+					case self::MODE_INSERT:
+					case self::MODE_INSERT_OR_UPDATE:
+						($newId = $this->insertRecord($data, $dataSirConfiguration)) ? $data->{$dataSirConfiguration->idColumn} = $newId : NULL;
+						unset($data->__sirFailedToGet);
+						break;
+				}
+			} else {
+				switch ($dataSirConfiguration->mode) {
+					case self::MODE_INSERT_OR_UPDATE:
+					case self::MODE_UPDATE:
+						$this->updateRecord($data, $dataSirConfiguration);
+						break;
+				}
 			}
 		}
 
 		$data = $this->syncParentDependents($parentDependents, $data, $dataSirConfiguration->idColumn);
 
-		unset($data->{self::SIR});
+		if (! Opton::get('DEBUG_SIR', $_ENV)) {
+			unset($data->{self::SIR});
+		}
 
 		return $data;
+	}
+
+	public function getRecord(\stdClass $data, DataSirConfiguration $dataSirConfiguration): ?\stdClass {
+		$select = $this->getQueryFactory()
+			->newSelect()
+			->cols([
+			'*'
+		])
+			->from($dataSirConfiguration->table)
+			->where($dataSirConfiguration->searchColumn . ' = :' . $dataSirConfiguration->searchColumn)
+			->bindValues([
+			$dataSirConfiguration->searchColumn => Opton::get($dataSirConfiguration->searchColumn, $data),
+		]);
+
+		$sth = $this->getPdo()
+			->prepare($select->getStatement());
+		$sth->execute($select->getBindValues());
+
+		return ($record = $sth->fetch(\PDO::FETCH_OBJ)) ? $record : NULL;
+	}
+
+	public function insertRecord(\stdClass $data, DataSirConfiguration $dataSirConfiguration): ?int {
+		$insert = $this->getQueryFactory()
+			->newInsert()
+			->into($dataSirConfiguration->table)
+			->cols($this->normalizeDataColumns($data, $dataSirConfiguration->idColumn, TRUE))
+			->bindValues($this->normalizeDataColumns($data, $dataSirConfiguration->idColumn));
+
+		$sth = $this->getPdo()
+			->prepare($insert->getStatement());
+		$sth->execute($insert->getBindValues());
+
+		$idColumn = $insert->getLastInsertIdName($dataSirConfiguration->idColumn);
+
+		return ($newId = $this->getPdo()
+			->lastInsertId($idColumn)) ? (int) $newId : NULL;
+	}
+
+	public function updateRecord(\stdClass $data, DataSirConfiguration $dataSirConfiguration): void {
+		$update = $this->getQueryFactory()
+			->newUpdate()
+			->table($dataSirConfiguration->table)
+			->cols($this->normalizeDataColumns($data, $dataSirConfiguration->idColumn))
+			->where($dataSirConfiguration->searchColumn . ' = :' . $dataSirConfiguration->searchColumn)
+			->bindValues([
+			$dataSirConfiguration->searchColumn => Opton::get($dataSirConfiguration->searchColumn, $data),
+		]);
+
+		$sth = $this->getPdo()
+			->prepare($update->getStatement());
+		$sth->execute($update->getBindValues());
 	}
 
 	public function normalizeDataColumns(\stdClass $data, string $idColumn, bool $onlyColumns = FALSE): array {
@@ -142,19 +194,9 @@ class Sir {
 	}
 
 	public function getDataSirConfiguration(\stdClass $data): ?DataSirConfiguration {
-		$sir = Opton::get(self::SIR, $data);
-		if ($sir) {
-			$table = Opton::get(self::TABLE, $sir);
-			$searchColumn = Opton::get(self::SEARCH_COLUMN, $sir);
-			$idColumn = Opton::get(self::ID_COLUMN, $sir, 'id');
-		}
+		$dataSirConfiguration = Opton::get(self::SIR, $data);
 
-		return $sir ? new DataSirConfiguration(
-			[
-				self::TABLE => $table,
-				self::SEARCH_COLUMN => $searchColumn,
-				self::ID_COLUMN => $idColumn,
-			]) : NULL;
+		return $dataSirConfiguration ? new DataSirConfiguration((array) $dataSirConfiguration) : NULL;
 	}
 
 	public function syncParentDependents(array $parentDependents, \stdClass $data, string $columnId): \stdClass {
@@ -170,7 +212,9 @@ class Sir {
 						(int) Opton::get($columnId, $data));
 				}
 
-				unset($data->{self::DEPENDENT_ON_PARENT . '_' . $parentDependency->name});
+				if (! Opton::get('DEBUG_SIR', $_ENV)) {
+					unset($data->{self::DEPENDENT_ON_PARENT . '_' . $parentDependency->name});
+				}
 			}
 		}
 
