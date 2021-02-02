@@ -38,6 +38,10 @@ class Sir {
 
 	public const ID_COLUMN = 'idColumn';
 
+	public const PARENT_COLUMN_ID = 'parentColumnId';
+
+	public const RECORDS = 'records';
+
 	public const MODE = 'mode';
 
 	public const MODE_INSERT = 'insert';
@@ -53,6 +57,7 @@ class Sir {
 	];
 
 	public function __construct(?SirConfiguration $sirConfiguration = NULL) {
+		$_ENV['DEBUG_SIR'] = TRUE;
 		if ($sirConfiguration) {
 			($pdoSettings = Opton::get('pdoSettings', $sirConfiguration)) ? $this->setPdoSettings($pdoSettings) : NULL;
 			($databaseType = Opton::get('databaseType', $sirConfiguration)) ? $this->setDatabaseType($databaseType) : NULL;
@@ -101,6 +106,7 @@ class Sir {
 		$dataSirConfiguration = $this->getDataSirConfiguration($data);
 		if ($dataSirConfiguration && ! Opton::get($dataSirConfiguration->idColumn, $data)) {
 			($record = $this->getRecord($data, $dataSirConfiguration)) ? $data->{$dataSirConfiguration->idColumn} = (int) $record->{$dataSirConfiguration->idColumn} : NULL;
+
 			if (! $record) {
 				$data->__sirFailedToGet = TRUE;
 				switch ($dataSirConfiguration->mode) {
@@ -180,12 +186,17 @@ class Sir {
 		$sth->execute($update->getBindValues());
 	}
 
+	const MAGIC_SIR_PROPERTIES = [
+		self::SIR,
+		'__sirFailedToGet',
+	];
+
 	public function normalizeDataColumns(\stdClass $data, string $idColumn, bool $onlyColumns = FALSE): array {
 		$columns = [];
 		foreach ($data as $key => $value) {
-			if (! is_object($value) && $key !== self::SIR) {
+			if (! is_object($value) && ! in_array($key, self::MAGIC_SIR_PROPERTIES)) {
 				$columns[$key] = $value;
-			} elseif (is_object($value) && $key !== self::SIR) {
+			} elseif (is_object($value) && ! in_array($key, self::MAGIC_SIR_PROPERTIES)) {
 				($id = Opton::get($idColumn, $value)) ? $columns[$key] = $id : NULL;
 			}
 		}
