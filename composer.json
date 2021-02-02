@@ -1,0 +1,16 @@
+{
+	"name": "kristos80/sir",
+	"description": "Simple Records -- WIP",
+	"require": {
+		"aura/sqlquery": "^2.7",
+		"kristos80/opton": "^1.1"
+	},
+	"scripts": {
+		"start": "php -S localhost:2121 index.php"
+	},
+	"autoload": {
+		"psr-4": {
+			"Kristos80\\Sir\\": "src/Kristos80/Sir/"
+		}
+	}
+}
