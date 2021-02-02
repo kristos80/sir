@@ -1,6 +1,6 @@
 {
 	"name": "kristos80/sir",
-	"description": "Simple Records -- WIP",
+	"description": "Simple Records",
 	"require": {
 		"aura/sqlquery": "^2.7",
 		"kristos80/opton": "^1.1"
