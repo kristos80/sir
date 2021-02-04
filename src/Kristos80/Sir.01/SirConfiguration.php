@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace Kristos80\Sir;
 
-class SirConfiguration {
+final class SirConfiguration {
 
 	/**
 	 * @var \PDO

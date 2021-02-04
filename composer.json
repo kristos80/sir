@@ -13,5 +13,8 @@
 		"psr-4": {
 			"Kristos80\\Sir\\": "src/Kristos80/Sir/"
 		}
+	},
+	"config": {
+		"process-timeout": 0
 	}
 }
