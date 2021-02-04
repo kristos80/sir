@@ -1,3 +1,5 @@
+**WIP**   
+**Not to be used in production**
 ```
 <?php
 use Kristos80\Sir\Sir;
