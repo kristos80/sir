@@ -30,9 +30,6 @@ final class Sir {
 		$dataConfiguration = $data->getConfiguration();
 		if (! Opton::get($dataConfiguration->idColumn, $data)) {
 			($record = $this->getRecord($data)) && $data->sync((array) $record);
-			// $data->{$dataConfiguration->idColumn} = (int) $record->{$dataConfiguration->idColumn};
-
-			// ! $record && ($newId = $this->insertRecord($data)) && $data->{$dataConfiguration->idColumn} = $newId;
 		}
 
 		return $this->syncCollections($data);
