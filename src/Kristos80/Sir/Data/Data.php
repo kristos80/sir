@@ -6,6 +6,7 @@ namespace Kristos80\Sir\Data;
 use Kristos80\Sir\Traits\PropertySetterPattern;
 use Kristos80\Sir\Configuration\DataConfiguration;
 use Kristos80\Opton\Opton;
+use Kristos80\Sir\Configuration\Constants;
 
 abstract class Data extends PropertySetterPattern {
 
@@ -14,6 +15,8 @@ abstract class Data extends PropertySetterPattern {
 	public string $_searchColumn = '';
 
 	public string $_idColumn = 'id';
+
+	public string $_mode = Constants::DATA_MODE_INSERT;
 
 	protected ?DataConfiguration $_configuration = NULL;
 
@@ -36,6 +39,22 @@ abstract class Data extends PropertySetterPattern {
 		}
 	}
 
+	public function sync(array $data): Data {
+		$configuration = $this->getConfiguration();
+		$idColumn = $configuration->idColumn;
+
+		if (in_array($idColumn, array_keys($data))) {
+			$this->{$idColumn} = $data[$idColumn];
+		}
+
+		foreach ($data as $property => $value) {
+			property_exists($this, $property) && ! is_a($this->{$property}, Data::class) &&
+				($this->{$property} = (is_numeric($value) ? $value * 1 : $value));
+		}
+
+		return $this;
+	}
+
 	public function getConfiguration(): DataConfiguration {
 		if (is_a($this->_configuration, DataConfiguration::class)) {
 			return $this->_configuration;
@@ -46,15 +65,16 @@ abstract class Data extends PropertySetterPattern {
 				'table' => $this->_table,
 				'searchColumn' => $this->_searchColumn,
 				'idColumn' => $this->_idColumn,
+				'mode' => $this->_mode,
 			]);
 
 		return $this->_configuration;
 	}
 
-	public function getColumns(bool $withValues = TRUE): array {
+	public function getColumns(bool $withValues = TRUE, bool $forExport = FALSE): array {
 		$columns = [];
 		foreach ($this as $property => $value) {
-			$value_ = is_a($value, Data::class) ? $value->getIdValue() : $value;
+			$value_ = is_a($value, Data::class) ? (! $forExport ? $value->getIdValue() : $value->export()) : $value;
 			$this->isValidColumn($property) && ($columns[$property] = $value_);
 		}
 
@@ -104,9 +124,10 @@ abstract class Data extends PropertySetterPattern {
 
 	public function export(): \stdClass {
 		foreach ($this->_dataCollections as $dataCollection) {
-			property_exists($this, $collectionName = $dataCollection->name) && $this->{$collectionName} = $dataCollection->export();
+			// property_exists($this, $collectionName = $dataCollection->name) &&
+			$this->{$dataCollection->name} = $dataCollection->export();
 		}
 
-		return json_decode(json_encode($this->getColumns(TRUE)));
+		return json_decode(json_encode($this->getColumns(TRUE, TRUE)));
 	}
 }

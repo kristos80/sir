@@ -13,5 +13,6 @@ final class DataConfiguration extends PropertySetterPattern {
 
 	public string $idColumn = 'id';
 
-	public string $dataMode = Constants::DATA_MODE_INSERT;
+	public string $mode = Constants::DATA_MODE_INSERT;
+	
 }

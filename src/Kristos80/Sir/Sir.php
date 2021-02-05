@@ -8,6 +8,7 @@ use Kristos80\Sir\Data\Data;
 use Kristos80\Opton\Opton;
 use Aura\SqlQuery\QueryFactory;
 use Kristos80\Sir\Data\DataCollection;
+use Kristos80\Sir\Configuration\Constants;
 
 final class Sir {
 
@@ -28,10 +29,10 @@ final class Sir {
 
 		$dataConfiguration = $data->getConfiguration();
 		if (! Opton::get($dataConfiguration->idColumn, $data)) {
-			($record = $this->getRecord($data)) &&
-				$data->{$dataConfiguration->idColumn} = (int) $record->{$dataConfiguration->idColumn};
+			($record = $this->getRecord($data)) && $data->sync((array) $record);
+			// $data->{$dataConfiguration->idColumn} = (int) $record->{$dataConfiguration->idColumn};
 
-			! $record && ($newId = $this->insertRecord($data)) && $data->{$dataConfiguration->idColumn} = $newId;
+			// ! $record && ($newId = $this->insertRecord($data)) && $data->{$dataConfiguration->idColumn} = $newId;
 		}
 
 		return $this->syncCollections($data);
@@ -41,7 +42,7 @@ final class Sir {
 		return $this->configuration->getPdo();
 	}
 
-	private function getRecord(Data $data): ?\stdClass {
+	private function getRecord(Data $data, int $recursion = 0): ?\stdClass {
 		$dataConfiguration = $data->getConfiguration();
 
 		$select = $this->getQueryFactory()
@@ -62,10 +63,33 @@ final class Sir {
 
 		$this->throwSqlErrorIfNeeded($sth);
 
-		return ($record = $sth->fetch(\PDO::FETCH_OBJ)) ? $record : NULL;
+		$record = $sth->fetch(\PDO::FETCH_OBJ);
+
+		if ($record) {
+			switch ($dataConfiguration->mode) {
+				case Constants::DATA_MODE_INSERT_UPDATE:
+				case Constants::DATA_MODE_UPDATE:
+					if ($recursion > 1) {
+						break;
+					}
+
+					$this->updateRecord($data);
+					$record = NULL;
+					break;
+			}
+		} else {
+			switch ($dataConfiguration->mode) {
+				case Constants::DATA_MODE_INSERT:
+				case Constants::DATA_MODE_INSERT_UPDATE:
+					$this->insertRecord($data);
+					break;
+			}
+		}
+
+		return $record ? $record : $this->getRecord($data, ++ $recursion);
 	}
 
-	private function insertRecord(Data $data): ?int {
+	private function insertRecord(Data $data): void {
 		$dataConfiguration = $data->getConfiguration();
 
 		$insert = $this->getQueryFactory()
@@ -79,11 +103,22 @@ final class Sir {
 		$sth->execute($insert->getBindValues());
 
 		$this->throwSqlErrorIfNeeded($sth);
+	}
 
-		$idColumn = $insert->getLastInsertIdName($dataConfiguration->idColumn);
+	private function updateRecord(Data $data): void {
+		$dataConfiguration = $data->getConfiguration();
 
-		return ($newId = $this->getPdo()
-			->lastInsertId($idColumn)) ? (int) $newId : NULL;
+		$update = $this->getQueryFactory()
+			->newUpdate()
+			->table($dataConfiguration->table)
+			->cols($data->getColumns())
+			->where($dataConfiguration->searchColumn . ' = :' . $dataConfiguration->searchColumn);
+
+		$sth = $this->configuration->getPdo()
+			->prepare($update->getStatement());
+		$sth->execute($update->getBindValues());
+
+		$this->throwSqlErrorIfNeeded($sth);
 	}
 
 	private function syncCollections(Data $data): Data {
