@@ -123,6 +123,11 @@ abstract class Data extends PropertySetterPattern {
 	}
 
 	public function export(): \stdClass {
+		$debug = Opton::get('SIR_DEBUG', $_ENV);
+		if ($debug) {
+			return json_decode(json_encode($this));
+		}
+
 		foreach ($this->_dataCollections as $dataCollection) {
 			// property_exists($this, $collectionName = $dataCollection->name) &&
 			$this->{$dataCollection->name} = $dataCollection->export();

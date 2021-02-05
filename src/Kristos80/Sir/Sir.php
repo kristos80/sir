@@ -21,6 +21,8 @@ final class Sir {
 	}
 
 	public function sync(Data $data, ?string $parentColumn = NULL, ?int $parentId = NULL): Data {
+		$debug = Opton::get('SIR_DEBUG', $_ENV);
+
 		$parentId ? $data->{$parentColumn} = $parentId : NULL;
 
 		foreach ($data as $key => $value) {
@@ -29,7 +31,10 @@ final class Sir {
 
 		$dataConfiguration = $data->getConfiguration();
 		if (! Opton::get($dataConfiguration->idColumn, $data)) {
-			($record = $this->getRecord($data)) && $data->sync((array) $record);
+			! (($record = $this->getRecord($data)) && $data->sync((array) $record)) && $debug &&
+				$data->NOTFOUND_ = (object) [
+					'config' => $dataConfiguration
+				];
 		}
 
 		return $this->syncCollections($data);
