@@ -7,23 +7,11 @@ use Kristos80\Sir\Traits\PropertySetterPattern;
 
 final class PdoSettings extends PropertySetterPattern {
 
-	/**
-	 * @var string
-	 */
-	public $hostname = '127.0.0.1';
+	public string $hostname = '127.0.0.1';
 
-	/**
-	 * @var string
-	 */
-	public $database = 'test';
+	public string $database = 'test';
 
-	/**
-	 * @var string
-	 */
-	public $username = 'root';
+	public string $username = 'root';
 
-	/**
-	 * @var string
-	 */
-	public $password = '';
+	public string $password = '';
 }

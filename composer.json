@@ -7,7 +7,13 @@
 		"kristos80/opton": "^1.1"
 	},
 	"scripts": {
-		"start": "php -S localhost:2121 index.php"
+		"start": "php -S localhost:2121 index.php",
+		"analyse": [
+			"@analyse-phpinsights",
+			"@analyse-churn"
+		],
+		"analyse-churn": "churn run",
+		"analyse-phpinsights": "phpinsights analyse"
 	},
 	"autoload": {
 		"psr-4": {

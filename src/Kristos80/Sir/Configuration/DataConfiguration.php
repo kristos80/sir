@@ -7,18 +7,11 @@ use Kristos80\Sir\Traits\PropertySetterPattern;
 
 final class DataConfiguration extends PropertySetterPattern {
 
-	/**
-	 * @var string
-	 */
-	public $table;
+	public string $table;
 
-	/**
-	 * @var string
-	 */
-	public $searchColumn;
+	public string $searchColumn;
 
-	/**
-	 * @var string
-	 */
-	public $idColumn = 'id';
+	public string $idColumn = 'id';
+
+	public string $dataMode = Constants::DATA_MODE_INSERT;
 }

@@ -11,6 +11,5 @@ trait ExecuteOnConstructTrait {
 	}
 
 	protected function construct(): void {
-		echo 'HELLO';
 	}
 }
