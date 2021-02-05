@@ -1,6 +1,6 @@
 **WIP**   
 **Not to be used in production**
-```
+```PHP
 <?php
 use Kristos80\Sir\Configuration\SirConfiguration;
 use Kristos80\Sir\Sir;
