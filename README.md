@@ -71,3 +71,85 @@ $store->addCollectionFromArray($productsCollection, 'products', 'store_id');
 
 echo json_encode($sir->sync($store)
 	->export());
+```
+Classes.php
+```PHP
+<?php
+use Kristos80\Sir\Data\Data;
+
+final class Term extends Data {
+
+	public string $_table = 'term';
+
+	public string $_searchColumn = 'slug';
+
+	public int $attribute_id;
+
+	public string $slug;
+
+	public string $label;
+}
+
+final class Attribute extends Data {
+
+	public string $_table = 'attribute';
+
+	public string $_searchColumn = 'slug';
+
+	public string $label;
+
+	public string $slug;
+
+	/**
+	 * @var []Term
+	 */
+	public array $terms = [];
+}
+
+final class Store extends Data {
+
+	public string $_table = 'store';
+
+	public string $_searchColumn = 'uid';
+		
+	public string $type;
+
+	public string $name;
+
+	public string $desc;
+
+	public string $uid;
+
+	public string $base_api_url;
+
+	public int $processing_offset;
+}
+
+final class Product extends Data {
+
+	public string $_table = 'product';
+
+	public string $_searchColumn = 'uid';
+
+	public string $name;
+
+	public string $sku;
+
+	public string $uid;
+
+	public $product_type_id;
+
+	public $store_id;
+
+	public int $parent;
+}
+
+final class ProductType extends Data {
+
+	public string $_table = 'product_type';
+
+	public string $_searchColumn = 'label';
+
+	public string $label;
+}
+```
