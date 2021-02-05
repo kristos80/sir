@@ -39,7 +39,11 @@ final class Sir {
 		return $this->configuration->getPdo();
 	}
 
-	private function getRecord(Data $data, int $recursion = 0): ?\stdClass {
+	private function getRecord(Data $data, string $mode = 'select', int $recursion = 0): ?\stdClass {
+		if ($mode === 'select' && $recursion > 1) {
+			return NULL;
+		}
+
 		$dataConfiguration = $data->getConfiguration();
 
 		$select = $this->getQueryFactory()
@@ -62,19 +66,15 @@ final class Sir {
 
 		$record = $sth->fetch(\PDO::FETCH_OBJ);
 
-		if ($record) {
+		if ($record && $mode !== 'update') {
 			switch ($dataConfiguration->mode) {
 				case Constants::DATA_MODE_INSERT_UPDATE:
 				case Constants::DATA_MODE_UPDATE:
-					if ($recursion > 1) {
-						break;
-					}
-
 					$this->updateRecord($data);
-					$record = NULL;
+					return $this->getRecord($data, 'update');
 					break;
 			}
-		} else {
+		} elseif ($mode !== 'update') {
 			switch ($dataConfiguration->mode) {
 				case Constants::DATA_MODE_INSERT:
 				case Constants::DATA_MODE_INSERT_UPDATE:
@@ -83,7 +83,7 @@ final class Sir {
 			}
 		}
 
-		return $record ? $record : $this->getRecord($data, ++ $recursion);
+		return $record ? $record : $this->getRecord($data, 'select', ++ $recursion);
 	}
 
 	private function insertRecord(Data $data): void {
