@@ -21,6 +21,7 @@ final class Sir {
 	}
 
 	public function sync(Data $data, ?string $parentColumn = NULL, ?int $parentId = NULL): Data {
+		$data->setUp($this->configuration);
 		$debug = Opton::get('SIR_DEBUG', $_ENV);
 
 		$parentId ? $data->{$parentColumn} = $parentId : NULL;
@@ -124,18 +125,18 @@ final class Sir {
 	}
 
 	private function syncCollections(Data $data): Data {
-		$dataConfiguration = $data->getConfiguration();
 		foreach ($data->_dataCollections as $key => $dataCollection) {
-			$data->_dataCollections[$key] = $this->syncCollection($dataCollection,
-				$data->{$dataConfiguration->idColumn});
+			$data->_dataCollections[$key] = $this->syncCollection($dataCollection, $data);
 		}
 
 		return $data;
 	}
 
-	private function syncCollection(DataCollection $dataCollection, int $parentId): DataCollection {
-		foreach ($dataCollection->data as $key => $data) {
-			$dataCollection->data[$key] = $this->sync($data, $dataCollection->parentColumnId, $parentId);
+	private function syncCollection(DataCollection $dataCollection, Data $data): DataCollection {
+		$dataCollection->setUp($this->configuration, $data);
+
+		foreach ($dataCollection->data as $key => $data_) {
+			$dataCollection->data[$key] = $this->sync($data_, $dataCollection->parentColumnId, $data->getIdValue());
 		}
 
 		return $dataCollection;

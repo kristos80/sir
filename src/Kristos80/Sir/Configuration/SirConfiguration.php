@@ -18,9 +18,17 @@ final class SirConfiguration extends PropertySetterPattern {
 
 	public string $databaseType = 'mysql';
 
+	/**
+	 * @var NamingSettings
+	 */
+	public $namingSettings = [];
+
 	protected function construct(): void {
-		! is_a($this->pdoSettings, '\\Kristos80\\Sir\\Configuration\\PdoSettings') && ! is_a($this->pdo, '\\PDO') ? $this->pdoSettings = new PdoSettings(
+		! is_a($this->pdoSettings, PdoSettings::class) && ! is_a($this->pdo, \PDO::class) ? $this->pdoSettings = new PdoSettings(
 			is_array($this->pdoSettings) ? $this->pdoSettings : []) : NULL;
+
+		! is_a($this->namingSettings, NamingSettings::class) &&
+			$this->namingSettings = new NamingSettings($this->namingSettings);
 	}
 
 	public function getPdo(): \PDO {

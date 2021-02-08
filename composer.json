@@ -4,7 +4,8 @@
 	"license": "MIT",
 	"require": {
 		"aura/sqlquery": "^2.7",
-		"kristos80/opton": "^1.1"
+		"kristos80/opton": "^1.1",
+		"jawira/case-converter": "^3.4"
 	},
 	"scripts": {
 		"start": "php -S localhost:2121 index.php",

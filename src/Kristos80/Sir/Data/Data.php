@@ -7,6 +7,8 @@ use Kristos80\Sir\Traits\PropertySetterPattern;
 use Kristos80\Sir\Configuration\DataConfiguration;
 use Kristos80\Opton\Opton;
 use Kristos80\Sir\Configuration\Constants;
+use Jawira\CaseConverter\Convert;
+use Kristos80\Sir\Configuration\SirConfiguration;
 
 abstract class Data extends PropertySetterPattern {
 
@@ -14,7 +16,7 @@ abstract class Data extends PropertySetterPattern {
 
 	public string $_searchColumn = '';
 
-	public string $_idColumn = 'id';
+	public string $_idColumn = '';
 
 	public string $_mode = Constants::DATA_MODE_INSERT;
 
@@ -37,6 +39,16 @@ abstract class Data extends PropertySetterPattern {
 				$this->_dataCollections[] = $propertySetter;
 			}
 		}
+	}
+
+	public function setUp(SirConfiguration $sirConfiguration): void {
+		! $this->_table && $this->_table = $this->tableFromClass();
+		! $this->_searchColumn && $this->_searchColumn = $sirConfiguration->namingSettings->defaultSearchColumn;
+		$this->_idColumn = $sirConfiguration->namingSettings->defaultIdColumn;
+	}
+
+	protected function tableFromClass(): string {
+		return (new Convert(get_class($this)))->toSnake();
 	}
 
 	public function sync(array $data): Data {
@@ -99,7 +111,7 @@ abstract class Data extends PropertySetterPattern {
 		return $this;
 	}
 
-	public function addCollectionFromArray(array $data, string $name, string $parentColumnId): Data {
+	public function addCollectionFromArray(array $data, string $name, ?string $parentColumnId = NULL): Data {
 		$this->_dataCollections[] = new DataCollection(
 			[
 				'data' => $data,
