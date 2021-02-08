@@ -7,6 +7,7 @@ use Kristos80\Sir\Traits\PropertySetterPattern;
 use Kristos80\Sir\Configuration\SirConfiguration;
 use Kristos80\Sir\Configuration\NamingSettings;
 use Kristos80\Opton\Opton;
+use Kristos80\Sir\Configuration\Constants;
 
 final class DataCollection extends PropertySetterPattern {
 
@@ -47,10 +48,10 @@ final class DataCollection extends PropertySetterPattern {
 		$parentColumnId = NULL;
 
 		switch ($sirConfiguration->namingSettings->collectionsFK) {
-			case NamingSettings::COLLECTIONS_FK_FROM_ID:
+			case Constants::COLLECTIONS_FK_FROM_ID:
 				$parentColumnId = $parentData->_table . '_' . $parentData->_idColumn;
 				break;
-			case NamingSettings::COLLECTIONS_FK_FROM_TABLE:
+			case Constants::COLLECTIONS_FK_FROM_TABLE:
 				$parentColumnId = $parentData->_table;
 				break;
 		}
