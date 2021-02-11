@@ -61,7 +61,7 @@ abstract class Data extends PropertySetterPattern {
 
 		foreach ($data as $property => $value) {
 			property_exists($this, $property) && ! is_a($this->{$property}, Data::class) &&
-				($this->{$property} = (is_numeric($value) ? $value * 1 : $value));
+				$this->{$property} = $value;
 		}
 
 		return $this;
@@ -72,13 +72,12 @@ abstract class Data extends PropertySetterPattern {
 			return $this->_configuration;
 		}
 
-		$this->_configuration = new DataConfiguration(
-			[
-				'table' => $this->_table,
-				'searchColumn' => $this->_searchColumn,
-				'idColumn' => $this->_idColumn,
-				'mode' => $this->_mode,
-			]);
+		$this->_configuration = new DataConfiguration([
+			'table' => $this->_table,
+			'searchColumn' => $this->_searchColumn,
+			'idColumn' => $this->_idColumn,
+			'mode' => $this->_mode,
+		]);
 
 		return $this->_configuration;
 	}
@@ -112,12 +111,11 @@ abstract class Data extends PropertySetterPattern {
 	}
 
 	public function addCollectionFromArray(array $data, string $name, ?string $parentColumnId = NULL): Data {
-		$this->_dataCollections[] = new DataCollection(
-			[
-				'data' => $data,
-				'name' => $name,
-				'parentColumnId' => $parentColumnId,
-			]);
+		$this->_dataCollections[] = new DataCollection([
+			'data' => $data,
+			'name' => $name,
+			'parentColumnId' => $parentColumnId,
+		]);
 
 		return $this;
 	}
