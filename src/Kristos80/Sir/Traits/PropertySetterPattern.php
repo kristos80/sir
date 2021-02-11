@@ -7,7 +7,7 @@ abstract class PropertySetterPattern {
 
 	public function __construct(array $propertySetters = []) {
 		foreach ($propertySetters as $property => $value) {
-			property_exists($this, $property) ? $this->{$property} = (is_numeric($value) ? $value * 1 : $value) : NULL;
+			property_exists($this, $property) && $this->{$property} = $value;
 		}
 	}
 }
